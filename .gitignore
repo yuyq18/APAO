@@ -1,4 +1,4 @@
-data/
+*emb-llama-td.npy
 ckpt/
 results/
 wandb/
