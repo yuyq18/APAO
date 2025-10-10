@@ -1,5 +1,5 @@
 export PYTHONPATH=./src:$PYTHONPATH
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=0
 
 export SEED=42
 
@@ -17,5 +17,4 @@ python src/train/train_msl.py \
     --seed $SEED \
     --dataset $DATASET \
     --wandb_run_name $WANDB_RUN_NAME \
-    --method_name $method_name \
-    --epoch 4
+    --method_name $method_name

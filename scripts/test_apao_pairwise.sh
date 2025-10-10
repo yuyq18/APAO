@@ -1,12 +1,12 @@
 export PYTHONPATH=./src:$PYTHONPATH
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=0
 
 export SEED=42
 beam_size=20
 test_bsz=512
 
 DATASET=Office  # Office, Grocery, Beauty, Yelp
-method_name=Llama_APAO_Pairwise  # T5_APAO_Pairwise, Llama_APAO_Pairwise
+method_name=T5_APAO_Pairwise  # T5_APAO_Pairwise, Llama_APAO_Pairwise
 
 beta=0.1
 prefix_tau=1.0

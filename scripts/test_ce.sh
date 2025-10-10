@@ -1,12 +1,12 @@
 export PYTHONPATH=./src:$PYTHONPATH
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=0
 
 export SEED=42
 beam_size=20
 test_bsz=512
 
 DATASET=Office  # Office, Grocery, Beauty, Yelp
-method_name=Llama_CE  # T5_CE, Llama_CE
+method_name=T5_CE  # T5_CE, Llama_CE
 
 export WANDB_RUN_NAME="${method_name}_seed${SEED}"
 

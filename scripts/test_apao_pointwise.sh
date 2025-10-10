@@ -1,5 +1,5 @@
 export PYTHONPATH=./src:$PYTHONPATH
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=0
 
 export SEED=42
 beam_size=20
