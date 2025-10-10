@@ -89,34 +89,38 @@ class TestCollator(object):
 
 # For MSL
 class ConstrainedCollator(object):
-    def __init__(self, args, tokenizer, trie):
+    def __init__(self, args, tokenizer, trie, add_input_eos=True):
         self.args = args
-        self.only_train_response = args.only_train_response
         self.tokenizer = tokenizer
         if self.tokenizer.pad_token_id is None:
             self.tokenizer.pad_token_id = 0
         # print(self.tokenizer.model_max_length)
         self.trie = trie
+        self.add_input_eos = add_input_eos
 
     def __call__(self, batch):
         input_texts = [d["input_ids"] for d in batch]
         label_texts = [d["labels"] for d in batch]
 
-        inputs = self.tokenizer(input_texts,
-                                return_tensors="pt",
-                                padding="longest",
-                                max_length=self.tokenizer.model_max_length,
-                                truncation=True,
-                                return_attention_mask=True,
-                                add_special_tokens=True)
+        inputs = self.tokenizer(
+            input_texts,
+            return_tensors="pt",
+            padding="longest",
+            max_length=self.tokenizer.model_max_length,
+            truncation=True,
+            return_attention_mask=True,
+            add_special_tokens=self.add_input_eos
+        )
 
-        labels = self.tokenizer(label_texts,
-                                return_tensors="pt",
-                                padding="longest",
-                                max_length=self.tokenizer.model_max_length,
-                                truncation=True,
-                                return_attention_mask=True,
-                                add_special_tokens=True)
+        labels = self.tokenizer(
+            label_texts,
+            return_tensors="pt",
+            padding="longest",
+            max_length=self.tokenizer.model_max_length,
+            truncation=True,
+            return_attention_mask=True,
+            add_special_tokens=True
+        )
         inputs['labels'] = labels['input_ids']
         inputs['labels'][inputs['labels'] == self.tokenizer.pad_token_id] = -100
 

@@ -13,7 +13,7 @@ from models import *
 from utils.utils import *
 from utils.collator import *
 from utils.dataset import *
-from utils.callbacks import ResampleNegsCallback
+from utils.generation_trie import Trie
 import wandb
 
 
@@ -45,23 +45,23 @@ def train(args):
     config.save_pretrained(args.output_dir)
     
     # ==================================== Dataset & Collator ====================================
-    if "pointwise" in args.method_name.lower():
-        train_data, valid_data = load_datasets(args)
-        if args.backbone_name == "T5":
-            collator = Collator(args, tokenizer, add_input_eos=True)
-        elif args.backbone_name == "Llama" and args.decoder_only_data_mode == "inter-level":
-            collator = Collator(args, tokenizer, add_input_eos=False) # Set add_input_eos=False for inter-level data
-        else:
-            raise NotImplementedError
-    elif "pairwise" in args.method_name.lower():
-        train_data, valid_data = load_neg_sample_on_epoch_datasets(args, tokenizer)
-        if args.backbone_name == "T5":
-            collator = FastCollatorWithItemNeg(args, tokenizer, sampling=args.sampling, add_input_eos=True)
-        elif args.backbone_name == "Llama" and args.decoder_only_data_mode == "inter-level":
-            collator = FastCollatorWithItemNeg(args, tokenizer, sampling=args.sampling, add_input_eos=False)
+
+    train_data, valid_data = load_datasets(args)
+    all_items_texts = train_data.get_all_items()
+    candidate_trie = Trie(
+        [
+            [0] + tokenizer.encode(candidate)
+            for candidate in all_items_texts
+        ]
+    )
+    
+    if args.backbone_name == "T5":
+        collator = ConstrainedCollator(args, tokenizer, trie=candidate_trie, add_input_eos=True)
+    elif args.backbone_name == "Llama" and args.decoder_only_data_mode == "inter-level":
+        collator = ConstrainedCollator(args, tokenizer, trie=candidate_trie, add_input_eos=False) # Set add_input_eos=False for inter-level data
     else:
         raise NotImplementedError
-    
+
     # ==================================== Method ====================================
     model = method_class(
         config,
@@ -70,30 +70,11 @@ def train(args):
     model.resize_token_embeddings(vocab_size)
     model.to(device)
 
-    # set valid_prefix_num for pairwise methods
-    if "pairwise" in args.method_name.lower() and args.is_neg_scale:
-        all_items_texts = train_data.get_all_items()
-        all_items = [tokenizer.encode(candidate) for candidate in all_items_texts]
-        T = all_items[0].__len__()
-        prefix_set = [set() for _ in range(T-1)]
-        for _item in all_items:
-            for t in range(1, T):
-                prefix = tuple(_item[:t])
-                prefix_set[t-1].add(prefix)
-        valid_prefix_num = [len(prefix_set[t]) for t in range(T-1)]
-        model.set_valid_prefix_num(valid_prefix_num)
-    
     # ==================================== Trainer ====================================
 
-    if "pairwise" in args.method_name.lower():
-        callbacks=[
-            EarlyStoppingCallback(early_stopping_patience=20),
-            ResampleNegsCallback(train_data, valid_data, base_seed=args.seed)
-        ]
-    else:
-        callbacks=[
-            EarlyStoppingCallback(early_stopping_patience=20)
-        ]
+    callbacks=[
+        EarlyStoppingCallback(early_stopping_patience=20)
+    ]
 
     trainer = CustomTrainer(
         model=model,
@@ -153,7 +134,7 @@ def train(args):
 
 if __name__ == "__main__":
     init_parser = argparse.ArgumentParser(description='Model')
-    init_parser.add_argument('--method_name', type=str, default='T5_APAO_Pointwise', help='method name')
+    init_parser.add_argument('--method_name', type=str, default='T5_CE', help='method name')
 
     init_args, init_extras = init_parser.parse_known_args()
 

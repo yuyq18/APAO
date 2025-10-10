@@ -1,4 +1,3 @@
-
 import argparse
 import json
 
@@ -102,6 +101,8 @@ def test(args):
                 return_dict_in_generate=True,
                 early_stopping=True,
                 pad_token_id=tokenizer.eos_token_id,
+                my_num_beams=args.num_beams,
+                my_prefix_allowed_tokens_fn=prefix_allowed_tokens,
             )
             if args.backbone_name == "Llama":
                 output_ids = output["sequences"][:, -4:]
