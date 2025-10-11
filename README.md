@@ -104,3 +104,19 @@ python src/test/test_apao.py \
     --num_beams $beam_size \
     --is_constrained_beam_search
 ```
+
+## 3. Training with Baselines
+Run the scripts
+
+```bash
+bash scripts/train_ce.sh
+bash scripts/train_msl.sh
+```
+
+## 4. Evaluation with Baselines
+Run the scripts
+
+```bash
+bash scripts/test_ce.sh
+bash scripts/test_msl.sh
+```
