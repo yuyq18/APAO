@@ -134,6 +134,8 @@ class Llama_MSL(LlamaForCausalLM):
             slice_indices = slice(-logits_to_keep, None) if isinstance(logits_to_keep, int) else logits_to_keep
             logits = self.lm_head(history_hidden_states[:, slice_indices, :])
             if constrain_mask is not None:
+                if isinstance(logits_to_keep, int):
+                    constrain_mask = constrain_mask[:, -logits_to_keep:, :]
                 logits[constrain_mask == 0] = -float("inf")
             
             logits = logits / self.ce_tau
@@ -170,12 +172,20 @@ class Llama_MSL(LlamaForCausalLM):
         else:
             mask = None
 
+        model_inputs = super().prepare_inputs_for_generation(
+            input_ids,
+            past_key_values=past_key_values,
+            attention_mask=attention_mask,
+            inputs_embeds=inputs_embeds,
+            cache_position=cache_position,
+            **kwargs,
+        )
         return {
-            "input_ids": input_ids,
-            "past_key_values": past_key_values,
-            "attention_mask": attention_mask,
-            "inputs_embeds": inputs_embeds,
-            "cache_position": cache_position,
+            "input_ids": model_inputs['input_ids'],
+            "past_key_values": model_inputs['past_key_values'],
+            "attention_mask": model_inputs['attention_mask'],
+            "inputs_embeds": model_inputs['inputs_embeds'],
+            "cache_position": model_inputs['cache_position'],
             "constrain_mask": mask,
             **kwargs,
         }
