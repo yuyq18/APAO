@@ -142,7 +142,7 @@ class T5_MSL(T5ForConditionalGeneration):
             loss = softmax_ce_loss
 
         else:
-            lm_logits = lm_logits
+            lm_logits = lm_logits / self.ce_tau  # For test
             loss = None
 
         if not return_dict:

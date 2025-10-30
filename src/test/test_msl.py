@@ -71,7 +71,8 @@ def test(args):
     model = method_class.from_pretrained(
         args.ckpt_path,
         low_cpu_mem_usage=True,
-        device_map=device_map
+        device_map=device_map,
+        args=args,
     )
 
     # ==================================== Test ====================================
@@ -103,6 +104,7 @@ def test(args):
                 pad_token_id=tokenizer.eos_token_id,
                 my_num_beams=args.num_beams,
                 my_prefix_allowed_tokens_fn=prefix_allowed_tokens,
+                use_cache=False,
             )
             if args.backbone_name == "Llama":
                 output_ids = output["sequences"][:, -4:]
@@ -164,7 +166,7 @@ if __name__ == "__main__":
     parser = parse_global_args(parser)
     parser = parse_dataset_args(parser)
     parser = parse_test_args(parser)
-
+    parser = method_class.parse_model_args(parser)
     args, extras = parser.parse_known_args()
 
     args.backbone_name = init_args.method_name.split('_')[0]

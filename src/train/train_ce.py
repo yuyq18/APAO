@@ -96,8 +96,6 @@ def train(args):
             dataloader_num_workers = args.dataloader_num_workers,
             dataloader_persistent_workers = False,
             label_names=['labels'],
-            metric_for_best_model='eval_total_loss',
-            greater_is_better=False
         ),
         tokenizer=tokenizer,
         data_collator=collator,
